@@ -6,9 +6,7 @@ class InputController {
     focused;
     ACTION_ACTIVATED;
     ACTION_DEACTIVATED;
-    keys = [];
-    currentKeyDown;
-    currentKeyUp;
+    _keys = [];
 
 
     constructor(actionsToBind, target) {
@@ -21,15 +19,18 @@ class InputController {
     }
 
     enableActions(actionName) {
+        this.ACTION_ACTIVATED = actionName;
         this.actions[actionName].enabled = true;
     }
 
     disableActions(actionName) {
+        this.ACTION_DEACTIVATED = actionName;
         this.actions[actionName].enabled = false;
     }
 
     isActionActive(action) {
-        if(action in this.actions) {
+        if(!this.enabled){ return false }
+        else if(action in this.actions) {
             if(this.actions[action].enabled) {
                 for (let i = 0; i < this.actions[action].keys.length; i++) {
                     if (this.isKeyPressed(this.actions[action].keys[i])) {
@@ -46,8 +47,12 @@ class InputController {
 
     attach(target, dontEnable){
         this.elem = target;
-        this.elem.addEventListener("keyup", this.keyUp);
-        this.elem.addEventListener("keydown", this.keyDown);
+        this.elem.addEventListener("keyup", (e)=>{
+            this.keyUpInp(e);
+        });
+        this.elem.addEventListener("keydown", (e)=>{
+            this.keyDownInp(e);
+        });
         window.addEventListener("focus", this.focus);
         window.addEventListener("blur", this.blur);
         if(dontEnable) {
@@ -61,14 +66,7 @@ class InputController {
     }
 
     isKeyPressed(keyCode) {
-        console.log(this.currentKeyDown);
-        if(this.currentKeyDown == keyCode) {
-
-            return true;
-        }
-        else {
-            return false;
-        }
+        return this._keys[keyCode];
     }
 
     focus() {
@@ -79,17 +77,16 @@ class InputController {
         this.focused = false;
     }
 
-    keyUp(e) {
-        this.currentKeyUp = e.keyCode;
+    keyUpInp(e) {
+        console.log(this._keys);
+        this._keys[e.keyCode] = false;
     }
 
-    keyDown(e) {
-        this.currentKeyDown = e.keyCode;
+    keyDownInp(e) {
+        this._keys[e.keyCode] = true;
     }
 
     detach() {
-        this.elem.removeEventListener("keyup", this.keyUp);
-        this.elem.removeEventListener("keydown", this.keyDown);
         this.elem = undefined;
         this.enabled = false;
         window.removeEventListener("focus", this.focus);
@@ -114,6 +111,14 @@ let actions1 = {
         keys: [40, 83],
         enabled: true,
     },
+    "disLeft": {
+        keys: [80],
+        enabled: true,
+    },
+    "enLeft": {
+        keys: [79],
+        enabled: true,
+    },
 };
 
 let actions2 = {
@@ -129,8 +134,8 @@ let actions2 = {
         keys: [104, 87],
         enabled: true,
     },
-    "down": {
-        keys: [98, 83],
+    "disLeft": {
+        keys: [80],
         enabled: true,
     },
 };
@@ -140,30 +145,37 @@ let box = document.getElementById("box");
 let inp = new InputController(actions1, body);
 let left = 0;
 let up = 0;
+box.style.left = "0px";
+box.style.top = "0px";
 let step = 5;
 inp.attach(inp.elem);
 
 body.addEventListener("keydown", (e) => {
-    console.log(e);
-    if(inp.isActionActive("left")){
+    if (inp.isActionActive("left")) {
+        left -= step;
+        let str = String(left) + "px";
+        box.style.left = str;
+    }
+    if (inp.isActionActive("right")) {
         left += step;
         let str = String(left) + "px";
         box.style.left = str;
     }
-    if(inp.isActionActive("right")){
-        left -= step;
-        let str = String(left) + "px";
-        box.style.left = String(left);
-    }
-    if(inp.isActionActive("up")){
+    if (inp.isActionActive("up")) {
         up -= step;
         let str = String(up) + "px";
-        box.style.top = String(up);
+        box.style.top = str;
     }
-    if(inp.isActionActive("down")){
+    if (inp.isActionActive("down")) {
         up += step;
         let str = String(up) + "px";
-        box.style.top = String(up);
+        box.style.top = str;
+    }
+    if (inp.isActionActive("disLeft")) {
+        inp.disableActions("left");
+    }
+    if (inp.isActionActive("enLeft")) {
+        inp.detach();
     }
 });
 
