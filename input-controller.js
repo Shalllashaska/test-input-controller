@@ -78,7 +78,6 @@ class InputController {
     }
 
     keyUpInp(e) {
-        console.log(this._keys);
         this._keys[e.keyCode] = false;
     }
 
@@ -209,7 +208,7 @@ function disableUp(){
     inp.disableActions("up");
 }
 function disableDown(){
-    inp.enableActions("down");
+    inp.disableActions("down");
 }
 function enableLeft(){
     inp.enableActions("left");
