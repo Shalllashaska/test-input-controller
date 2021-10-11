@@ -7,10 +7,18 @@ class InputController {
     ACTION_ACTIVATED;
     ACTION_DEACTIVATED;
     _keys = [];
-
+    attached = false;
+    detached = false;
+    keyboard = false;
 
     constructor(actionsToBind, target) {
         this.actions = actionsToBind;
+        Object.keys(this.actions).forEach((e) =>{
+            Object.keys(this.actions[e]).forEach((el)=>{
+                if(e=="keys"){this.keyboard = true}
+            });
+        });
+        console.log(this.keyboard);
         this.elem = target;
     }
 
@@ -30,22 +38,26 @@ class InputController {
 
     isActionActive(action) {
         if(!this.enabled){ return false }
-        else if(action in this.actions) {
-            if(this.actions[action].enabled) {
-                for (let i = 0; i < this.actions[action].keys.length; i++) {
-                    if (this.isKeyPressed(this.actions[action].keys[i])) {
-                        return true;
+        else if(!this.focused){ return false }
+        else if(this.keyboard) {
+            if (action in this.actions) {
+                if (this.actions[action].enabled) {
+                    for (let i = 0; i < this.actions[action].keys.length; i++) {
+                        if (this.isKeyPressed(this.actions[action].keys[i])) {
+                            return true;
+                        }
                     }
+                } else {
+                    return false;
                 }
             }
-            else {
-                return false;
-            }
+            return false;
         }
-        return false;
+        else return false;
     }
 
     attach(target, dontEnable){
+        if(this.attached) { return }
         this.elem = target;
         this.elem.addEventListener("keyup", (e)=>{
             this.keyUpInp(e);
@@ -53,8 +65,12 @@ class InputController {
         this.elem.addEventListener("keydown", (e)=>{
             this.keyDownInp(e);
         });
-        window.addEventListener("focus", this.focus);
-        window.addEventListener("blur", this.blur);
+        window.addEventListener("focus", ()=>{
+            this.focus();
+        });
+        window.addEventListener("blur", ()=>{
+            this.blur();
+        });
         if(dontEnable) {
             this.enabled = false;
             this.focused = false;
@@ -63,18 +79,21 @@ class InputController {
             this.enabled = true;
             this.focused = true;
         }
-    }
-
-    isKeyPressed(keyCode) {
-        return this._keys[keyCode];
+        this.attached = true;
     }
 
     focus() {
         this.focused = true;
+        console.log(this.focused);
     }
 
     blur() {
         this.focused = false;
+        console.log(this.focused);
+    }
+
+    isKeyPressed(keyCode) {
+        return this._keys[keyCode];
     }
 
     keyUpInp(e) {
@@ -86,146 +105,22 @@ class InputController {
     }
 
     detach() {
+        if(this.detached) return;
+        this.elem.removeEventListener("keyup", (e)=>{
+            this.keyUpInp(e);
+        });
+        this.elem.removeEventListener("keydown", (e)=>{
+            this.keyDownInp(e);
+        });
         this.elem = undefined;
         this.enabled = false;
+        this.attached = false;
         window.removeEventListener("focus", this.focus);
         window.removeEventListener("blur", this.blur);
+        this.detached = true;
     }
 }
 
-let actions1 = {
-    "left": {
-        keys: [37, 65],
-        enabled: true,
-    },
-    "right": {
-        keys: [39, 68],
-        enabled: true,
-    },
-    "up": {
-        keys: [38, 87],
-        enabled: true,
-    },
-    "down": {
-        keys: [40, 83],
-        enabled: true,
-    },
-};
-
-let actions2 = {
-    "left": {
-        keys: [100, 65],
-        enabled: true,
-    },
-    "right": {
-        keys: [102, 68],
-        enabled: true,
-    },
-    "up": {
-        keys: [104, 87],
-        enabled: true,
-    },
-    "scale+": {
-        keys: [221],
-        enabled: true,
-    },
-    "scale-": {
-        keys: [219],
-        enabled: true,
-    },
-    "jump": {
-        keys: [32],
-        enabled: true,
-    },
-};
-
-let body = document.body;
-let box = document.getElementById("box");
-let inp = new InputController(actions1, body);
-let left = 100;
-let up = 100;
-box.style.left = "100px";
-box.style.top = "100px";
-let step = 5;
-let scaleStep = 0.1;
-let scale = 1;
-inp.attach(inp.elem);
-
-body.addEventListener("keydown", (e) => {
-    if (inp.isActionActive("left")) {
-        left -= step;
-        let str = String(left) + "px";
-        box.style.left = str;
-    }
-    if (inp.isActionActive("right")) {
-        left += step;
-        let str = String(left) + "px";
-        box.style.left = str;
-    }
-    if (inp.isActionActive("up")) {
-        up -= step;
-        let str = String(up) + "px";
-        box.style.top = str;
-    }
-    if (inp.isActionActive("down")) {
-        up += step;
-        let str = String(up) + "px";
-        box.style.top = str;
-    }
-    if (inp.isActionActive("scale+")) {
-        scale += scaleStep;
-        box.style.transform = "scale("+scale+")";
-    }
-    if (inp.isActionActive("scale-")) {
-        scale -= scaleStep;
-        box.style.transform = "scale("+scale+")";
-    }
-    if (inp.isActionActive("jump")) {
-        console.log(box.style.backgroundColor);
-        if(box.style.backgroundColor == "rgb(255, 0, 0)"){
-            box.style.backgroundColor = "rgb(0, 255, 0)";
-        }
-        else{
-            box.style.backgroundColor = "rgb(255, 0, 0)";
-        }
-
-    }
-});
-
-function attachFunc() {
-    inp.attach(body);
-}
-function detachFunc() {
-    inp.detach();
-}
-function disableLeft(){
-    inp.disableActions("left");
-}
-function disableRight(){
-    inp.disableActions("right");
-}
-function disableUp(){
-    inp.disableActions("up");
-}
-function disableDown(){
-    inp.disableActions("down");
-}
-function enableLeft(){
-    inp.enableActions("left");
-}
-function enableRight(){
-    inp.enableActions("right");
-}
-function enableUp(){
-    inp.enableActions("up");
-}
-function enableDown(){
-    inp.enableActions("down");
-}
-
-function bindScaleButt(){
-    inp.bindActions(actions2);
-}
 
 
 
