@@ -6,8 +6,10 @@ class InputController {
     focused;
     ACTION_ACTIVATED;
     ACTION_DEACTIVATED;
+    keys = [];
+    currentKeyDown;
+    currentKeyUp;
 
-    _keys;
 
     constructor(actionsToBind, target) {
         this.actions = actionsToBind;
@@ -19,51 +21,49 @@ class InputController {
     }
 
     enableActions(actionName) {
-        console.log(actionName);
-        if(this.isActionActive(actionName)) {
-            this.actions[actionName].enabled = true;
-        }
-        else {
-            return false;
-        }
+        this.actions[actionName].enabled = true;
     }
 
     disableActions(actionName) {
-        if(!this.isActionActive(actionName)) {
-            this.actions[actionName].enabled = false;
-        }
-        else {
-            return false;
-        }
+        this.actions[actionName].enabled = false;
     }
 
     isActionActive(action) {
         if(action in this.actions) {
-            for (let i = 0; i < this.actions[action].keys.length; i++){
-                if(this.isKeyPressed(this.actions[action].keys[i])) {
-                    return true;
+            if(this.actions[action].enabled) {
+                for (let i = 0; i < this.actions[action].keys.length; i++) {
+                    if (this.isKeyPressed(this.actions[action].keys[i])) {
+                        return true;
+                    }
                 }
             }
-            return false;
+            else {
+                return false;
+            }
         }
         return false;
     }
 
     attach(target, dontEnable){
         this.elem = target;
-        console.log(this.elem);
-        this.elem.addEventListener("keyup", this.keyUp, false);
-        this.elem.addEventListener("keydown", this.keyDown, false);
+        this.elem.addEventListener("keyup", this.keyUp);
+        this.elem.addEventListener("keydown", this.keyDown);
+        window.addEventListener("focus", this.focus);
+        window.addEventListener("blur", this.blur);
         if(dontEnable) {
             this.enabled = false;
+            this.focused = false;
         }
         else {
             this.enabled = true;
+            this.focused = true;
         }
     }
 
     isKeyPressed(keyCode) {
-        if(this._keys[keyCode]) {
+        console.log(this.currentKeyDown);
+        if(this.currentKeyDown == keyCode) {
+
             return true;
         }
         else {
@@ -73,49 +73,100 @@ class InputController {
 
     focus() {
         this.focused = true;
-        console.log(this.focused);
     }
 
     blur() {
         this.focused = false;
-        console.log(this.focused);
     }
 
     keyUp(e) {
-        console.log(e);
+        this.currentKeyUp = e.keyCode;
     }
 
     keyDown(e) {
-        console.log(e);
+        this.currentKeyDown = e.keyCode;
     }
 
     detach() {
+        this.elem.removeEventListener("keyup", this.keyUp);
+        this.elem.removeEventListener("keydown", this.keyDown);
         this.elem = undefined;
         this.enabled = false;
+        window.removeEventListener("focus", this.focus);
+        window.removeEventListener("blur", this.blur);
     }
 }
 
-let actions = {
+let actions1 = {
     "left": {
         keys: [37, 65],
-        enabled: false,
+        enabled: true,
     },
     "right": {
         keys: [39, 68],
-        enabled: false,
+        enabled: true,
     },
     "up": {
         keys: [38, 87],
-        enabled: false,
+        enabled: true,
     },
     "down": {
         keys: [40, 83],
-        enabled: false,
+        enabled: true,
     },
 };
 
-let cube = document.getElementById("box");
-let inp = new InputController(actions, cube);
+let actions2 = {
+    "left": {
+        keys: [100, 65],
+        enabled: true,
+    },
+    "right": {
+        keys: [102, 68],
+        enabled: true,
+    },
+    "up": {
+        keys: [104, 87],
+        enabled: true,
+    },
+    "down": {
+        keys: [98, 83],
+        enabled: true,
+    },
+};
 
+let body = document.body;
+let box = document.getElementById("box");
+let inp = new InputController(actions1, body);
+let left = 0;
+let up = 0;
+let step = 5;
 inp.attach(inp.elem);
-console.log(inp);
+
+body.addEventListener("keydown", (e) => {
+    console.log(e);
+    if(inp.isActionActive("left")){
+        left += step;
+        let str = String(left) + "px";
+        box.style.left = str;
+    }
+    if(inp.isActionActive("right")){
+        left -= step;
+        let str = String(left) + "px";
+        box.style.left = String(left);
+    }
+    if(inp.isActionActive("up")){
+        up -= step;
+        let str = String(up) + "px";
+        box.style.top = String(up);
+    }
+    if(inp.isActionActive("down")){
+        up += step;
+        let str = String(up) + "px";
+        box.style.top = String(up);
+    }
+});
+
+
+
+
