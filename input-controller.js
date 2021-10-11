@@ -134,6 +134,10 @@ let actions2 = {
         keys: [219],
         enabled: true,
     },
+    "jump": {
+        keys: [32],
+        enabled: true,
+    },
 };
 
 let body = document.body;
@@ -176,6 +180,16 @@ body.addEventListener("keydown", (e) => {
     if (inp.isActionActive("scale-")) {
         scale -= scaleStep;
         box.style.transform = "scale("+scale+")";
+    }
+    if (inp.isActionActive("jump")) {
+        console.log(box.style.backgroundColor);
+        if(box.style.backgroundColor == "rgb(255, 0, 0)"){
+            box.style.backgroundColor = "rgb(0, 255, 0)";
+        }
+        else{
+            box.style.backgroundColor = "rgb(255, 0, 0)";
+        }
+
     }
 });
 

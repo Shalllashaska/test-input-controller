@@ -10,7 +10,7 @@ body{
 
 #box {
     position: absolute;
-    background-color: red;
+    background-color: rgb(0, 255, 0);
     width: 200px;
     height: 200px;
     left: 100px;
