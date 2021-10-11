@@ -111,14 +111,6 @@ let actions1 = {
         keys: [40, 83],
         enabled: true,
     },
-    "disLeft": {
-        keys: [80],
-        enabled: true,
-    },
-    "enLeft": {
-        keys: [79],
-        enabled: true,
-    },
 };
 
 let actions2 = {
@@ -134,8 +126,12 @@ let actions2 = {
         keys: [104, 87],
         enabled: true,
     },
-    "disLeft": {
-        keys: [80],
+    "scale+": {
+        keys: [221],
+        enabled: true,
+    },
+    "scale-": {
+        keys: [219],
         enabled: true,
     },
 };
@@ -143,11 +139,13 @@ let actions2 = {
 let body = document.body;
 let box = document.getElementById("box");
 let inp = new InputController(actions1, body);
-let left = 0;
-let up = 0;
-box.style.left = "0px";
-box.style.top = "0px";
+let left = 100;
+let up = 100;
+box.style.left = "100px";
+box.style.top = "100px";
 let step = 5;
+let scaleStep = 0.1;
+let scale = 1;
 inp.attach(inp.elem);
 
 body.addEventListener("keydown", (e) => {
@@ -171,13 +169,52 @@ body.addEventListener("keydown", (e) => {
         let str = String(up) + "px";
         box.style.top = str;
     }
-    if (inp.isActionActive("disLeft")) {
-        inp.disableActions("left");
+    if (inp.isActionActive("scale+")) {
+        scale += scaleStep;
+        box.style.transform = "scale("+scale+")";
     }
-    if (inp.isActionActive("enLeft")) {
-        inp.detach();
+    if (inp.isActionActive("scale-")) {
+        scale -= scaleStep;
+        box.style.transform = "scale("+scale+")";
     }
 });
+
+function attachFunc() {
+    inp.attach(body);
+}
+function detachFunc() {
+    inp.detach();
+}
+function disableLeft(){
+    inp.disableActions("left");
+}
+function disableRight(){
+    inp.disableActions("right");
+}
+function disableUp(){
+    inp.disableActions("up");
+}
+function disableDown(){
+    inp.enableActions("down");
+}
+function enableLeft(){
+    inp.enableActions("left");
+}
+function enableRight(){
+    inp.enableActions("right");
+}
+function enableUp(){
+    inp.enableActions("up");
+}
+function enableDown(){
+    inp.enableActions("down");
+}
+
+function bindScaleButt(){
+    inp.bindActions(actions2);
+}
+
+
 
 
 
